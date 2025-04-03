@@ -8,8 +8,11 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 复制应用代码
-COPY . .
+# 复制 app.py 到 /app
+COPY app.py .
+
+# 复制 templates/index.html 到 /app/templates
+COPY templates/index.html ./templates/
 
 # 初始化数据库
 RUN python -c "from app import init_db; init_db()"
