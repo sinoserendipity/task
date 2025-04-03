@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>任务记录程序</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .tab-button {
+            padding: 12px 20px;
+            background-color: #ffffff;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            color: #333;
+        }
+        .tab-button:hover {
+            background-color: #4a90e2;
+            color: white;
+            transform: translateY(-2px);
+        }
+        .tab-button.active {
+            background-color: #4a90e2;
+            color: white;
+        }
+        .tab {
+            display: none;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .tab.active {
+            display: block;
+        }
+        h2 {
+            color: #333;
+            margin-top: 0;
+        }
+        h3 {
+            color: #4a90e2;
+            margin: 20px 0 10px;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        input, select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            flex: 1;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #357abd;
+        }
+        .task-item {
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            margin: 5px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        th {
+            background: #4a90e2;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        tfoot td {
+            font-weight: bold;
+            background: #eef4ff;
+        }
+        .count-input {
+            width: 50px;
+            padding: 5px;
+            text-align: center;
+        }
+        .save-button {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background: #fff;
+            border-radius: 8px;
+        }
+        .stats-table th, .stats-table td {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .stats-table th {
+            background: #6ab0ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="tabs">
+            <button class="tab-button active" onclick="showTab('settings')">设置</button>
+            <button class="tab-button" onclick="showTab('records')">记录</button>
+            <button class="tab-button" onclick="showTab('history')">历史数据</button>
+        </div>
+
+        <div id="settings" class="tab active">
+            <h2>任务设置</h2>
+            <div class="input-group">
+                <input type="text" id="taskName" placeholder="任务名称">
+                <input type="number" id="taskTime" placeholder="时间(分钟)" min="0.1" step="0.1">
+                <button onclick="addTask()">添加任务</button>
+            </div>
+            <h3>任务列表</h3>
+            <div id="taskList"></div>
+        </div>
+
+        <div id="records" class="tab">
+            <h2>任务记录</h2>
+            <div class="input-group">
+                <select id="taskSelect"></select>
+                <button onclick="incrementTask()">+</button>
+            </div>
+            <h3>今日完成情况 (<span id="todayDate"></span>)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>任务名称</th>
+                        <th>时间(分钟)</th>
+                        <th>个数</th>
+                        <th>工时(分钟)</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="todayRecords"></tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="4">总工时</td>
+                        <td id="totalHours"></td>
+                    </tr>
+                </tfoot>
+            </table>
+            <table class="stats-table" id="todayStats">
+                <thead>
+                    <tr>
+                        <th>任务名称</th>
+                        <th>总个数</th>
+                        <th>总工时(分钟)</th>
+                    </tr>
+                </thead>
+                <tbody id="todayStatsBody"></tbody>
+            </table>
+
+            <h3>本月完成情况</h3>
+            <table>
+                <thead>
+                   igraph <tr>
+                        <th>任务名称</th>
+                        <th>时间(分钟)</th>
+                        <th>个数</th>
+                        <th>工时(分钟)</th>
+                    </tr>
+                </thead>
+                <tbody id="monthlyRecords"></tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="3">总工时</td>
+                        <td id="monthlyTotalHours"></td>
+                    </tr>
+                </tfoot>
+            </table>
+            <table class="stats-table" id="monthlyStats">
+                <thead>
+                    <tr>
+                        <th>任务名称</th>
+                        <th>总个数</th>
+                        <th>总工时(分钟)</th>
+                    </tr>
+                </thead>
+                <tbody id="monthlyStatsBody"></tbody>
+            </table>
+        </div>
+
+        <div id="history" class="tab">
+            <h2>历史数据</h2>
+            <input type="date" id="datePicker" onchange="updateHistory()">
+            <table>
+                <thead>
+                    <tr>
+                        <th>任务名称</th>
+                        <th>时间(分钟)</th>
+                        <th>个数</th>
+                        <th>工时(分钟)</th>
+                    </tr>
+                </thead>
+                <tbody id="historyRecords"></tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="3">总工时</td>
+                        <td id="historyTotalHours"></td>
+                    </tr>
+                </tfoot>
+            </table>
+            <table class="stats-table" id="historyStats">
+                <thead>
+                    <tr>
+                        <th>任务名称</th>
+                        <th>总个数</th>
+                        <th>总工时(分钟)</th>
+                    </tr>
+                </thead>
+                <tbody id="historyStatsBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let tasks = [];
+        let selectedIndex = 0;
+
+        function showTab(tabId) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            document.querySelector(`button[onclick="showTab('${tabId}')"]`).classList.add('active');
+            if (tabId === 'records') updateRecords();
+            if (tabId === 'settings') updateTaskList();
+            if (tabId === 'history') updateHistory();
+        }
+
+        async function fetchTasks() {
+            const response = await fetch('/api/tasks');
+            tasks = await response.json();
+            updateTaskList();
+            updateTaskSelect();
+        }
+
+        async function addTask() {
+            const name = document.getElementById('taskName').value.trim();
+            const timeInput = document.getElementById('taskTime').value;
+            const time = parseFloat(timeInput);
+
+            if (!name) {
+                alert('任务名称不能为空');
+                return;
+            }
+            if (isNaN(time) || time <= 0) {
+                alert('时间必须大于0');
+                return;
+            }
+            const decimalPlaces = (timeInput.split('.')[1] || '').length;
+            if (decimalPlaces > 1) {
+                alert('时间只能有一位小数');
+                return;
+            }
+
+            const response = await fetch('/api/tasks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, time })
+            });
+            const result = await response.json();
+            if (result.success) {
+                document.getElementById('taskName').value = '';
+                document.getElementById('taskTime').value = '';
+                await fetchTasks();
+            } else {
+                alert(result.message || '添加任务失败');
+            }
+        }
+
+        function updateTaskList() {
+            document.getElementById('taskList').innerHTML = tasks.map(t => 
+                `<div class="task-item">${t.name} - ${t.time}分钟</div>`
+            ).join('');
+        }
+
+        function updateTaskSelect() {
+            const select = document.getElementById('taskSelect');
+            select.innerHTML = tasks.map((t, i) => 
+                `<option value="${i}">${t.name} (${t.time}分钟)</option>`
+            ).join('');
+            select.value = selectedIndex;
+        }
+
+        async function incrementTask() {
+            const select = document.getElementById('taskSelect');
+            selectedIndex = parseInt(select.value);
+            const response = await fetch('/api/increment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ task_index: selectedIndex })
+            });
+            if (response.ok) {
+                await updateRecords();
+            } else {
+                console.error('Failed to increment task');
+            }
+        }
+
+        async function saveTaskCount(taskKey, newCount) {
+            await fetch('/api/update_count', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ task_key: taskKey, count: newCount })
+            });
+            await updateRecords();
+        }
+
+        async function updateRecords() {
+            const todayResponse = await fetch('/api/records');
+            const todayData = await todayResponse.json();
+            document.getElementById('todayDate').textContent = todayData.date;
+            let totalHours = 0;
+            document.getElementById('todayRecords').innerHTML = Object.entries(todayData.records).map(([key, r]) => {
+                const workTime = Number((r.count * r.time).toFixed(1));
+                totalHours += workTime;
+                return `<tr>
+                    <td>${key.split('_')[0]}</td>
+                    <td>${r.time}</td>
+                    <td><input type="number" class="count-input" value="${r.count}" min="0" onchange="saveTaskCount('${key}', this.value)"></td>
+                    <td>${workTime}</td>
+                    <td><button class="save-button" onclick="saveTaskCount('${key}', this.parentElement.parentElement.querySelector('.count-input').value)">保存</button></td>
+                </tr>`;
+            }).join('');
+            document.getElementById('totalHours').textContent = totalHours.toFixed(1);
+
+            // 按任务名称统计今日数据
+            const todayStats = {};
+            Object.entries(todayData.records).forEach(([key, r]) => {
+                const taskName = key.split('_')[0];
+                if (!todayStats[taskName]) {
+                    todayStats[taskName] = { count: 0, workTime: 0 };
+                }
+                todayStats[taskName].count += r.count;
+                todayStats[taskName].workTime += Number((r.count * r.time).toFixed(1));
+            });
+            document.getElementById('todayStatsBody').innerHTML = Object.entries(todayStats).map(([name, stats]) => 
+                `<tr><td>${name}</td><td>${stats.count}</td><td>${stats.workTime.toFixed(1)}</td></tr>`
+            ).join('');
+
+            const monthlyResponse = await fetch('/api/monthly_records');
+            const monthlyData = await monthlyResponse.json();
+            let monthlyTotal = 0;
+            document.getElementById('monthlyRecords').innerHTML = Object.entries(monthlyData).map(([key, r]) => {
+                const workTime = Number((r.count * r.time).toFixed(1));
+                monthlyTotal += workTime;
+                return `<tr>
+                    <td>${key.split('_')[0]}</td>
+                    <td>${r.time}</td>
+                    <td>${r.count}</td>
+                    <td>${workTime}</td>
+                </tr>`;
+            }).join('');
+            document.getElementById('monthlyTotalHours').textContent = monthlyTotal.toFixed(1);
+
+            // 按任务名称统计月度数据
+            const monthlyStats = {};
+            Object.entries(monthlyData).forEach(([key, r]) => {
+                const taskName = key.split('_')[0];
+                if (!monthlyStats[taskName]) {
+                    monthlyStats[taskName] = { count: 0, workTime: 0 };
+                }
+                monthlyStats[taskName].count += r.count;
+                monthlyStats[taskName].workTime += Number((r.count * r.time).toFixed(1));
+            });
+            document.getElementById('monthlyStatsBody').innerHTML = Object.entries(monthlyStats).map(([name, stats]) => 
+                `<tr><td>${name}</td><td>${stats.count}</td><td>${stats.workTime.toFixed(1)}</td></tr>`
+            ).join('');
+        }
+
+        async function updateHistory() {
+            const date = document.getElementById('datePicker').value;
+            const response = await fetch(`/api/records?date=${date}`);
+            const data = await response.json();
+            let totalHours = 0;
+            document.getElementById('historyRecords').innerHTML = Object.entries(data.records).map(([key, r]) => {
+                const workTime = Number((r.count * r.time).toFixed(1));
+                totalHours += workTime;
+                return `<tr>
+                    <td>${key.split('_')[0]}</td>
+                    <td>${r.time}</td>
+                    <td>${r.count}</td>
+                    <td>${workTime}</td>
+                </tr>`;
+            }).join('');
+            document.getElementById('historyTotalHours').textContent = totalHours.toFixed(1);
+
+            // 按任务名称统计历史数据
+            const historyStats = {};
+            Object.entries(data.records).forEach(([key, r]) => {
+                const taskName = key.split('_')[0];
+                if (!historyStats[taskName]) {
+                    historyStats[taskName] = { count: 0, workTime: 0 };
+                }
+                historyStats[taskName].count += r.count;
+                historyStats[taskName].workTime += Number((r.count * r.time).toFixed(1));
+            });
+            document.getElementById('historyStatsBody').innerHTML = Object.entries(historyStats).map(([name, stats]) => 
+                `<tr><td>${name}</td><td>${stats.count}</td><td>${stats.workTime.toFixed(1)}</td></tr>`
+            ).join('');
+        }
+
+        // 初始化
+        document.getElementById('datePicker').value = new Date().toISOString().split('T')[0];
+        fetchTasks();
+        updateRecords();
+    </script>
+</body>
+</html>
